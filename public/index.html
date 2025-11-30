@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Security Login</title>
+
+    <meta name="google-site-verification" content="PQ24lR9EIsrGTEcVETS3nzB-S5DZZKjEChvZR1o4Omo" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+
+    <script type="importmap">
+        { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js", "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"
+        } }
+    </script>
+</head>
+
+<body>
+
+    <div class="container" id="container">
+
+        <div class="form-container sign-up-container">
+            <form id="registerForm">
+                <h1>Create Account</h1>
+                <span>Register your device</span>
+
+                <input type="text" id="reg-name" placeholder="Full Name" required />
+                <input type="email" id="reg-email" placeholder="Email" required />
+                <input type="password" id="reg-pass" placeholder="Create Password" required />
+
+                <input type="number" id="reg-passkey" placeholder="Create 4-Digit Passkey" maxlength="4" required />
+
+                <button type="submit" id="signup-btn">Sign Up & Save IP</button>
+                <p id="reg-message" class="message"></p>
+            </form>
+        </div>
+
+        <div class="form-container sign-in-container">
+            <form id="loginForm">
+
+                <div id="login-step-1" style="width: 100%; display: flex; flex-direction: column; gap: 15px;">
+                    <h1>Sign in</h1>
+                    <span>Enter your account credentials</span>
+
+                    <input type="email" id="login-email" placeholder="Email" required />
+                    <input type="password" id="login-pass" placeholder="Password" required />
+
+                    <a href="#">Forgot your password?</a>
+                    <button type="button" id="next-step-btn">Next Step</button>
+                    <p id="login-message-1" class="message"></p>
+                </div>
+
+                <div id="login-step-2" style="display: none; width: 100%; flex-direction: column; gap: 15px;">
+                    <h1>Security Check</h1>
+
+                    <span id="ip-status-msg" style="font-weight:bold;">Verifying Network...</span>
+
+                    <div class="security-box">
+                        <p style="margin: 5px 0; font-size: 10px;">Registered IP: <b id="display-reg-ip">...</b></p>
+                        <p style="margin: 5px 0; font-size: 10px;">Current IP: <b id="display-curr-ip">Scanning...</b></p>
+                    </div>
+
+                    <input type="password" id="passkey-input" placeholder="Enter Your Passkey" maxlength="4" class="passkey-field" />
+
+                    <div class="robot-container">
+                        <input type="checkbox" id="robot-check">
+                        <label for="robot-check">I am not a robot</label>
+                        <div class="fake-captcha-logo"></div>
+                    </div>
+
+                    <button type="submit">Verify & Login</button>
+
+                    <button type="button" id="back-btn" class="ghost" style="color: var(--text-primary); border: 1px solid rgba(255,255,255,0.2); margin-top: 10px; width: 100%;">Back</button>
+
+                    <p id="login-message-2" class="message"></p>
+                </div>
+
+            </form>
+        </div>
+
+        <div class="overlay-container">
+            <div class="overlay">
+                <div class="overlay-panel overlay-left">
+                    <h1>Welcome Back!</h1>
+                    <p>Login to access your secure dashboard.</p>
+                    <button class="ghost" id="signIn">Sign In</button>
+                </div>
+                <div class="overlay-panel overlay-right">
+                    <h1>Hello, Friend!</h1>
+                    <p>Register to lock your IP and set a Passkey.</p>
+                    <button class="ghost" id="signUp">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>
