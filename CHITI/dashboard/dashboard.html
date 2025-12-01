@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Humanoid Interface - Pro</title>
+
+    <!-- GOOGLE FONTS (Inter and Roboto Mono) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- LEAFLET MAP CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- CUSTOM STYLES -->
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- LIBRARIES -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- IMPORT MAP -->
+    <!-- IMPORT MAP (Updated to Stable Versions) -->
+    <!-- IMPORT MAP (Updated to Stable Versions) -->
+    <script type="importmap">
+        { "imports": { "three": "https://esm.sh/three@0.160.0", "three/addons/": "https://esm.sh/three@0.160.0/examples/jsm/", "firebase/app": "https://esm.sh/firebase@10.8.0/app", "firebase/auth": "https://esm.sh/firebase@10.8.0/auth", "firebase/firestore":
+        "https://esm.sh/firebase@10.8.0/firestore" } }
+    </script>
+    <script>
+        // We use 'pageshow' because it runs even when hitting the Forward button
+        window.addEventListener('pageshow', function(event) {
+
+            // 1. Check for the session key
+            const userSession = localStorage.getItem('activeUser');
+
+            // 2. If it is missing, BLOCK EVERYTHING
+            if (!userSession) {
+                // Hide the body immediately so they can't see the dashboard
+                document.documentElement.style.display = 'none';
+
+                // Force them back to login
+                window.location.replace("../index.html");
+            } else {
+                // If session exists, ensure page is visible
+                document.documentElement.style.display = 'block';
+            }
+        });
+    </script>
+
+</head>
+
+<body>
+
+    <!-- 3D BACKGROUND -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- LEFT DASHBOARD (TABS) -->
+    <div id="left-dashboard">
+
+        <!-- Tab Navigation -->
+        <div class="tab-header">
+            <button class="tab-btn active" onclick="window.openTab('monitoring')">MONITORING</button>
+            <button class="tab-btn" onclick="window.openTab('data')">DATA LINK</button>
+            <button class="tab-btn" onclick="window.openTab('updates')">UPDATES</button>
+        </div>
+
+        <!-- Tab Content Body -->
+        <div class="tab-body">
+
+            <!-- TAB 1: MONITORING (Telemetry + System + Charts) -->
+            <div id="tab-monitoring" class="tab-pane active">
+
+                <!-- Telemetry Section -->
+                <div class="panel">
+                    <h2>TELEMETRY <span id="cloud-status" class="status-badge active">CONNECTED</span></h2>
+                    <div class="battery-wrap">
+                        <div id="battery-fill" style="width:100%"></div><span id="battery-label">100%</span></div>
+
+                    <div class="stat-grid">
+                        <div class="stat-item"><span class="stat-label">VELOCITY</span><span class="stat-val" id="val-speed">0.00 m/s</span></div>
+                        <div class="stat-item"><span class="stat-label">POWER</span><span class="stat-val" id="val-pwr">0.5 W</span></div>
+                        <div class="stat-item"><span class="stat-label">DISTANCE</span><span class="stat-val" id="val-dist">0 m</span></div>
+                        <div class="stat-item"><span class="stat-label">RUNS</span><span class="stat-val" id="val-cycles">0</span></div>
+                    </div>
+                    <button onclick="window.togglePower()" id="btn-power" class="action-btn btn-success" style="margin-top:15px;">SYSTEM POWER: ON</button>
+                </div>
+
+                <!-- System Diagnostics Section -->
+                <div class="panel">
+                    <h2>SYSTEM DIAGNOSTICS</h2>
+                    <div class="monitor-grid">
+                        <div class="monitor-row"><span>CPU Load (Core 0)</span> <span id="mon-cpu">12%</span></div>
+                        <div class="monitor-row"><span>Bus Voltage</span> <span id="mon-volt">24.1V</span></div>
+                        <div class="monitor-row"><span>Core Temp</span> <span id="mon-temp">45°C</span></div>
+                        <div class="monitor-row"><span>Network Latency</span> <span id="mon-ping">24ms</span></div>
+                        <div class="monitor-row"><span>GPS Signal</span> <span id="gps-val" style="color:var(--danger-color)">ERR</span></div>
+                    </div>
+                </div>
+
+                <!-- Cloud Analytics Graphs -->
+                <div class="panel-section">
+                    <h2>CLOUD ANALYTICS</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="chart-container" style="flex:1;">
+                            <div class="chart-title">Distance History</div>
+                            <canvas id="chartDistance" class="chart-canvas"></canvas>
+                        </div>
+                        <div class="chart-container" style="flex:1;">
+                            <div class="chart-title">Efficiency Trend</div>
+                            <canvas id="chartEfficiency" class="chart-canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Config -->
+                <div class="panel-section">
+                    <h2>CONFIGURATION</h2>
+                    <div class="config-box" style="margin-top:0; border:none;">
+                        <div class="slider-group">
+                            <div class="slider-label"><span>IDLE LOAD</span> <span id="idle-val">1.0x</span></div><input type="range" id="idle-slider" min="0.1" max="5.0" step="0.1" value="1.0"></div>
+                        <div class="slider-group">
+                            <div class="slider-label"><span>WALK LOAD</span> <span id="walk-val">1.0x</span></div><input type="range" id="walk-slider" min="0.1" max="5.0" step="0.1" value="1.0"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: DATA LINK (Kinematics + Packets) -->
+            <div id="tab-data" class="tab-pane">
+                <div class="panel-dark">
+                    <h2 class="dark-header">KINEMATICS ANALYSIS</h2>
+                    <div class="kin-row"><span class="kin-label">Shoulder (Z)</span> <span class="kin-val" id="kin-s">0.00</span></div>
+                    <div class="kin-row"><span class="kin-label">Arm (X)</span> <span class="kin-val" id="kin-a">0.00</span></div>
+                    <div class="kin-row"><span class="kin-label">Elbow (X)</span> <span class="kin-val" id="kin-e">0.00</span></div>
+                    <div class="kin-row"><span class="kin-label">Wrist (Z)</span> <span class="kin-val" id="kin-w">0.00</span></div>
+                    <div style="border-top:1px dashed #333; margin:10px 0;"></div>
+                    <div class="kin-row"><span class="kin-label">End Effector X</span> <span class="kin-val" id="ee-x">0.00</span></div>
+                    <div class="kin-row"><span class="kin-label">End Effector Y</span> <span class="kin-val" id="ee-y">0.00</span></div>
+                    <div class="kin-row"><span class="kin-label">End Effector Z</span> <span class="kin-val" id="ee-z">0.00</span></div>
+                </div>
+
+                <div class="panel-dark" style="flex-grow:1; display:flex; flex-direction:column;">
+                    <h2 class="dark-header">PACKET STREAM <span style="color:#0f0">● 4Hz</span></h2>
+                    <div id="packet-display">Initializing stream...</div>
+                    <button onclick="window.downloadLog()" class="btn-secondary" style="width:100%; margin-top:auto; padding:10px; font-weight:bold;">DOWNLOAD JSON LOG</button>
+                </div>
+            </div>
+
+            <!-- TAB 3: UPDATES (Firmware) -->
+            <div id="tab-updates" class="tab-pane">
+                <div class="panel-dark" style="text-align:center; padding:40px 20px;">
+                    <h2 class="dark-header" style="justify-content: center;">FIRMWARE STATUS</h2>
+                    <div style="margin: 30px 0;">
+                        <span style="color:#888; font-size:0.8rem; display:block; margin-bottom:5px;">CURRENT VERSION</span>
+                        <span class="version-tag">v2.4.1</span>
+                    </div>
+
+                    <div class="update-status" id="update-msg">System is up to date.</div>
+
+                    <button id="btn-check-update" class="btn-update" onclick="window.checkForUpdates()">CHECK FOR UPDATES</button>
+
+                    <div class="progress-container" id="update-progress-wrap">
+                        <div class="progress-bar" id="update-progress"></div>
+                    </div>
+                </div>
+
+                <div class="panel-dark">
+                    <h2 class="dark-header">PATCH NOTES</h2>
+                    <ul class="changelog-list">
+                        <li>[v2.4.1] Hotfix for elbow singularity.</li>
+                        <li>[v2.4.0] Added Cloud Telemetry Sync.</li>
+                        <li>[v2.3.5] Optimized battery management logic.</li>
+                        <li>[v2.3.0] Introduced new inverse kinematics solver.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- RIGHT SIDE: MAP -->
+    <div id="map-container">
+        <div id="mini-map"></div>
+    </div>
+
+    <!-- CONTROLS (BOTTOM CENTER - VERY SMALL) -->
+    <div id="command-panel">
+        <div class="controls-legend">MANUAL CONTROL (Keyboard)</div>
+
+        <div class="controls-section">
+            <div class="control-group">
+                <span class="control-label">LOCOMOTION</span>
+                <div class="loco-grid">
+                    <div class="key-wrapper">
+                        <div class="key" id="key-w">W</div><span class="key-desc">F</span></div>
+                    <div class="key-wrapper">
+                        <div class="key" id="key-a">A</div><span class="key-desc">L</span></div>
+                    <div class="key-wrapper">
+                        <div class="key" id="key-s">S</div><span class="key-desc">B</span></div>
+                    <div class="key-wrapper">
+                        <div class="key" id="key-d">D</div><span class="key-desc">R</span></div>
+                    <div class="key-wrapper">
+                        <div class="key" id="key-shift">S</div><span class="key-desc">RUN</span></div>
+                    <div class="key-wrapper">
+                        <div class="key" id="key-e">E</div><span class="key-desc">CHRG</span></div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="control-label">MANIPULATION</span>
+                <div class="key-grid">
+                    <div class="key-wrapper">
+                        <div class="key" id="key-t">T/G</div><span class="key-desc">PITCH</span></div>
+                    <div class="key-wrapper">
+                        <div class="key" id="key-y">Y/H</div><span class="key-desc">ROLL</span></div>
+                    <div class="key-wrapper">
+                        <div class="key" id="key-u">U/J</div><span class="key-desc">ELBOW</span></div>
+                    <div class="key-wrapper">
+                        <div class="key" id="key-i">I/K</div><span class="key-desc">WRIST</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="alert-overlay">SYSTEM FAILURE: BATTERY DEPLETED</div>
+
+    <!-- CONFIGURATION SCRIPT FOR DEPLOYMENT -->
+    <!-- Paste your Firebase config object inside this script tag if deploying manually -->
+
+
+    <!-- LOGIC (Must be in the same folder) -->
+    <script type="module" src="script.js"></script>
+
+</body>
+
+</html>
